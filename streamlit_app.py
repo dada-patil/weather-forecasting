@@ -7,7 +7,7 @@ import requests
 API_URL = (
     os.getenv("API_BASE_URL")
     or os.getenv("RENDER_BACKEND_URL")
-    or "http://127.0.0.1:8001"
+    or "https://weather-forecasting-1-88o9.onrender.com"
 )
 
 
