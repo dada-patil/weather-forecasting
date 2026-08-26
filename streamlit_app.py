@@ -1,19 +1,21 @@
+import os
+
 import streamlit as st
 import requests
 
 
-API_URL = "http://127.0.0.1:8001"
+API_URL = (
+    os.getenv("API_BASE_URL")
+    or os.getenv("RENDER_BACKEND_URL")
+    or "http://127.0.0.1:8001"
+)
 
 
 # =========================================
 # PAGE CONFIG
 # =========================================
 
-st.set_page_config(
-    page_title="Weather Forecasting",
-    page_icon="🌦️",
-    layout="wide"
-)
+st.set_page_config(page_title="Weather Forecasting", page_icon="🌦️", layout="wide")
 
 
 # =========================================
@@ -22,9 +24,7 @@ st.set_page_config(
 
 st.title("🌦️ Weather Forecasting Application")
 
-st.write(
-    "Live Weather + CRUD Management System"
-)
+st.write("Live Weather + CRUD Management System")
 
 
 # =========================================
@@ -40,8 +40,8 @@ menu = st.sidebar.selectbox(
         "Create Weather",
         "View Records",
         "Update Weather",
-        "Delete Weather"
-    ]
+        "Delete Weather",
+    ],
 )
 
 
@@ -50,98 +50,50 @@ menu = st.sidebar.selectbox(
 # =========================================
 
 if menu == "Live Weather":
-
     st.header("🌍 Live Weather")
 
-    city = st.text_input(
-        "Enter City Name",
-        placeholder="Example: Hyderabad"
-    )
+    city = st.text_input("Enter City Name", placeholder="Example: Hyderabad")
 
     if st.button("Get Weather"):
-
         if city.strip() == "":
-
-            st.warning(
-                "Please enter a city."
-            )
+            st.warning("Please enter a city.")
 
         else:
-
             try:
-
-                response = requests.get(
-                    f"{API_URL}/weather/city/{city}",
-                    timeout=10
-                )
+                response = requests.get(f"{API_URL}/weather/city/{city}", timeout=10)
 
                 if response.status_code == 200:
-
                     data = response.json()
 
-                    st.success(
-                        f"Weather for {data['city']}"
-                    )
+                    st.success(f"Weather for {data['city']}")
 
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-
-                        st.metric(
-                            "Temperature",
-                            f"{data['temperature']} °C"
-                        )
+                        st.metric("Temperature", f"{data['temperature']} °C")
 
                     with col2:
-
-                        st.metric(
-                            "Humidity",
-                            f"{data['humidity']} %"
-                        )
+                        st.metric("Humidity", f"{data['humidity']} %")
 
                     with col3:
+                        st.metric("Wind Speed", f"{data['wind_speed']} km/h")
 
-                        st.metric(
-                            "Wind Speed",
-                            f"{data['wind_speed']} km/h"
-                        )
-
-                    st.subheader(
-                        f"Condition: {data['condition']}"
-                    )
+                    st.subheader(f"Condition: {data['condition']}")
 
                     # Forecast
 
-                    forecast = data.get(
-                        "forecast",
-                        {}
-                    )
+                    forecast = data.get("forecast", {})
 
                     if forecast:
+                        st.subheader("📅 7-Day Forecast")
 
-                        st.subheader(
-                            "📅 7-Day Forecast"
-                        )
+                        dates = forecast.get("time", [])
 
-                        dates = forecast.get(
-                            "time",
-                            []
-                        )
+                        max_temp = forecast.get("temperature_2m_max", [])
 
-                        max_temp = forecast.get(
-                            "temperature_2m_max",
-                            []
-                        )
+                        min_temp = forecast.get("temperature_2m_min", [])
 
-                        min_temp = forecast.get(
-                            "temperature_2m_min",
-                            []
-                        )
-
-                        for i in range(
-                            len(dates)
-                        ):
-
+                        for i in range(len(dates)):
                             st.write(
                                 f"**{dates[i]}** | "
                                 f"Min: {min_temp[i]}°C | "
@@ -149,16 +101,10 @@ if menu == "Live Weather":
                             )
 
                 else:
-
-                    st.error(
-                        response.text
-                    )
+                    st.error(response.text)
 
             except Exception as e:
-
-                st.error(
-                    f"Connection error: {e}"
-                )
+                st.error(f"Connection error: {e}")
 
 
 # =========================================
@@ -166,62 +112,34 @@ if menu == "Live Weather":
 # =========================================
 
 elif menu == "Create Weather":
-
     st.header("➕ Add Weather Record")
 
     city = st.text_input("City")
 
-    temperature = st.number_input(
-        "Temperature",
-        value=25.0
-    )
+    temperature = st.number_input("Temperature", value=25.0)
 
-    humidity = st.number_input(
-        "Humidity",
-        value=50.0
-    )
+    humidity = st.number_input("Humidity", value=50.0)
 
-    wind_speed = st.number_input(
-        "Wind Speed",
-        value=10.0
-    )
+    wind_speed = st.number_input("Wind Speed", value=10.0)
 
-    condition = st.text_input(
-        "Condition",
-        value="Sunny"
-    )
+    condition = st.text_input("Condition", value="Sunny")
 
     if st.button("Add Record"):
-
         data = {
-
             "city": city,
-
             "temperature": temperature,
-
             "humidity": humidity,
-
             "wind_speed": wind_speed,
-
-            "condition": condition
+            "condition": condition,
         }
 
-        response = requests.post(
-            f"{API_URL}/weather",
-            json=data
-        )
+        response = requests.post(f"{API_URL}/weather", json=data)
 
         if response.status_code == 200:
-
-            st.success(
-                "Weather record added successfully!"
-            )
+            st.success("Weather record added successfully!")
 
         else:
-
-            st.error(
-                response.text
-            )
+            st.error(response.text)
 
 
 # =========================================
@@ -229,35 +147,21 @@ elif menu == "Create Weather":
 # =========================================
 
 elif menu == "View Records":
-
     st.header("📋 Weather Records")
 
-    response = requests.get(
-        f"{API_URL}/weather"
-    )
+    response = requests.get(f"{API_URL}/weather")
 
     if response.status_code == 200:
-
         records = response.json()
 
         if records:
-
-            st.dataframe(
-                records,
-                use_container_width=True
-            )
+            st.dataframe(records, use_container_width=True)
 
         else:
-
-            st.info(
-                "No records found."
-            )
+            st.info("No records found.")
 
     else:
-
-        st.error(
-            response.text
-        )
+        st.error(response.text)
 
 
 # =========================================
@@ -265,64 +169,33 @@ elif menu == "View Records":
 # =========================================
 
 elif menu == "Update Weather":
-
     st.header("✏️ Update Weather")
 
-    weather_id = st.number_input(
-        "Weather ID",
-        min_value=1,
-        step=1
-    )
+    weather_id = st.number_input("Weather ID", min_value=1, step=1)
 
-    temperature = st.number_input(
-        "New Temperature",
-        value=25.0
-    )
+    temperature = st.number_input("New Temperature", value=25.0)
 
-    humidity = st.number_input(
-        "New Humidity",
-        value=50.0
-    )
+    humidity = st.number_input("New Humidity", value=50.0)
 
-    wind_speed = st.number_input(
-        "New Wind Speed",
-        value=10.0
-    )
+    wind_speed = st.number_input("New Wind Speed", value=10.0)
 
-    condition = st.text_input(
-        "New Condition",
-        value="Sunny"
-    )
+    condition = st.text_input("New Condition", value="Sunny")
 
     if st.button("Update Record"):
-
         data = {
-
             "temperature": temperature,
-
             "humidity": humidity,
-
             "wind_speed": wind_speed,
-
-            "condition": condition
+            "condition": condition,
         }
 
-        response = requests.put(
-            f"{API_URL}/weather/{weather_id}",
-            json=data
-        )
+        response = requests.put(f"{API_URL}/weather/{weather_id}", json=data)
 
         if response.status_code == 200:
-
-            st.success(
-                "Record updated successfully!"
-            )
+            st.success("Record updated successfully!")
 
         else:
-
-            st.error(
-                response.text
-            )
+            st.error(response.text)
 
 
 # =========================================
@@ -330,29 +203,15 @@ elif menu == "Update Weather":
 # =========================================
 
 elif menu == "Delete Weather":
-
     st.header("🗑️ Delete Weather")
 
-    weather_id = st.number_input(
-        "Weather ID",
-        min_value=1,
-        step=1
-    )
+    weather_id = st.number_input("Weather ID", min_value=1, step=1)
 
     if st.button("Delete Record"):
-
-        response = requests.delete(
-            f"{API_URL}/weather/{weather_id}"
-        )
+        response = requests.delete(f"{API_URL}/weather/{weather_id}")
 
         if response.status_code == 200:
-
-            st.success(
-                "Record deleted successfully!"
-            )
+            st.success("Record deleted successfully!")
 
         else:
-
-            st.error(
-                response.text
-            )
+            st.error(response.text)
